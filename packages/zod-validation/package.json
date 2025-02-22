@@ -1,0 +1,21 @@
+{
+  "name": "@workspace/zod-validation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@workspace/typescript-config": "workspace:*"
+  },
+  "exports": {
+    "./zod-schema": "./index.ts"
+  }
+}
