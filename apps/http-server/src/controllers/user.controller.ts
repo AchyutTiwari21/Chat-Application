@@ -185,7 +185,7 @@ const createRoom = asyncHandler ( async (req: Request, res: Response) => {
         data: {
             slug: parsedData.data.slug,
             adminId,
-            users: { connect: [{id: user.id}] }
+            users: { connect: {id: user.id} }
         }
     });
 

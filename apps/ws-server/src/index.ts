@@ -97,7 +97,7 @@ wss.on('connection', async function connection(socket, request) {
             }
 
             // db call to add the user in the room
-            if(authenticatedRoom.adminId !== userId) {
+            if((authenticatedRoom.adminId !== userId) && (authenticatedRoom.users.some((user) => user.id !== userId))) {
                 await prismaClient.room.update({
                     where: {
                         id: roomId
@@ -146,6 +146,7 @@ wss.on('connection', async function connection(socket, request) {
 
             // remove that person from that room
             allRoomSockets.get(roomId)?.filter((s) => s != socket);
+            socket.close();
            }
     
            //if the user wants to send the message to all the user in the particular room
