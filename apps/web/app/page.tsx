@@ -94,7 +94,7 @@ export default function Home() {
               <span className="font-bold">ChatApp</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2024 ChatApp. All rights reserved.
+              © 2025 ChatApp. All rights reserved.
             </div>
           </div>
         </div>
