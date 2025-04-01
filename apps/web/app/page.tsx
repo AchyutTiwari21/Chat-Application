@@ -2,6 +2,7 @@
 
 import { Button } from "@workspace/ui/components/button";
 import { MessageSquare, Zap, Shield, Users, ArrowRight } from "lucide-react";
+import FeatureCard from "@/components/featureCard";
 import Link from "next/link";
 
 export default function Home() {
@@ -99,17 +100,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-//@ts-ignore
-function FeatureCard({ icon, title, description }) {
-  return (
-    <div className="bg-card p-6 rounded-lg border hover:shadow-lg transition-shadow">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground">{description}</p>
     </div>
   );
 }
