@@ -2,6 +2,8 @@ import { Router } from "express";
 import { 
     registerUser,
     loginUser,
+    logoutUser,
+    refreshAccessToken,
     createRoom,
     getMessages,
     getRoomInfo
@@ -11,7 +13,12 @@ import { verifyJWT } from "../middlewares/auth.middleware";
 const router: Router = Router();
 
 router.route("/signup").post(registerUser);
+
 router.route("/signin").post(loginUser);
+
+router.route("/logout").post(verifyJWT, logoutUser);
+
+router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/create-room").post(verifyJWT, createRoom);
 

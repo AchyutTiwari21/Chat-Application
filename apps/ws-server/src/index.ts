@@ -66,7 +66,6 @@ wss.on('connection', async function connection(socket, request) {
 
         console.log(authenticatedUser);
         
-    
         if(!authenticatedUser) {
             socket.close();
             return;
@@ -174,6 +173,8 @@ wss.on('connection', async function connection(socket, request) {
                 return;
             }
 
+
+            // propogate the message to a message queue and then then propoagate it to the database
             const message = await prismaClient.chat.create({
                 data: {
                     chat: userMessage.payload.message,

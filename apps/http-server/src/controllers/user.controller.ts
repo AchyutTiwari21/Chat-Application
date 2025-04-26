@@ -89,9 +89,6 @@ const loginUser = asyncHandler( async (req: Request, res: Response) => {
         throw new ApiError(401, "Invalid Password");
     }
 
-    console.log(`ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}`);
-    
-
     if(ACCESS_TOKEN_SECRET === undefined || REFRESH_TOKEN_SECRET === undefined) {
         res.status(500).json({
             message: "Something went wrong."
@@ -160,6 +157,116 @@ const loginUser = asyncHandler( async (req: Request, res: Response) => {
         )
     );
     return;
+});
+
+const logoutUser = asyncHandler( async (req: Request, res: Response) => {
+    //@ts-ignore
+    const user = req.user;
+    if(!user) {
+        throw new ApiError(400, "Invalid Access");
+    }
+
+    const userId = user.id;
+    if( userId === undefined ) {
+        throw new ApiError(401, "Invalid Access.")
+    }
+
+    await prismaClient.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            refreshToken: null
+        }
+    });
+
+    res
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .status(200).json({
+        message: "User has been logged out successfully."
+    });
+    return;
+});
+
+const refreshAccessToken = asyncHandler( async (req: Request, res: Response) => {
+    //@ts-ignore
+    const refreshToken = req.cookies?.refreshToken || req.headers["Authorization"]?.replace("Bearer ", "");
+
+    if(!refreshToken) {
+        throw new ApiError(401, "Invalid Refresh Token.");
+    }
+
+    if(REFRESH_TOKEN_SECRET === undefined) {
+        res.status(500).json({
+            message: "Something went wrong."
+        });
+        return;
+    }
+
+    const decodedToken = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    if(typeof(decodedToken) === "string") {
+        res.status(500).json({
+            message: "Type of decoded token is not jwt payload."
+        });
+        return;
+    }
+
+    const user = await prismaClient.user.findUnique({
+        where: {
+            id: decodedToken.id
+        }
+    });
+
+    if(!user) {
+        throw new ApiError(401, "Invalid Access Token.");
+    }
+
+    if(user.refreshToken !== refreshToken) {
+        throw new ApiError(401, "Invalid Refresh Token.");
+    }
+
+    if(ACCESS_TOKEN_SECRET === undefined || REFRESH_TOKEN_SECRET === undefined) {
+        res.status(500).json({
+            message: "Something went wrong."
+        });
+        return;
+    }
+
+    const accessToken = jwt.sign(
+        {
+            id: user.id,
+            username: user.username,
+            email: user.email
+        },
+        ACCESS_TOKEN_SECRET,
+        {
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+        }
+    );
+
+    const newRefreshToken = jwt.sign(
+        {
+            id: user.id
+        },
+        REFRESH_TOKEN_SECRET,
+        {
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+        }
+    );
+
+    res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", newRefreshToken, options)
+    .json(
+        new ApiResponse(
+            200,
+            { accessToken, refreshToken: newRefreshToken },
+            "User signed the refresh token successfully.",
+            true
+        )
+    );
 });
 
 const createRoom = asyncHandler ( async (req: Request, res: Response) => {
@@ -324,6 +431,8 @@ const getRoomInfo = asyncHandler( async (req: Request, res: Response) => {
 export {
     registerUser,
     loginUser,
+    logoutUser,
+    refreshAccessToken,
     createRoom,
     getMessages,
     getRoomInfo
