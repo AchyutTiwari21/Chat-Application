@@ -250,6 +250,49 @@ const refreshAccessToken = asyncHandler( async (req: Request, res: Response) => 
     );
 });
 
+const getCurrentUser = asyncHandler( async (req: Request, res: Response) => {
+    //@ts-ignore
+    const user = req.user;
+    if(!user) {
+        throw new ApiError(400, "Invalid Access");
+    }
+
+    const userId = user.id;
+    if( userId === undefined ) {
+        throw new ApiError(401, "Invalid Access.")
+    }
+
+    const currentUser = await prismaClient.user.findUnique({
+        where: {
+            id: userId
+        },
+        select: {
+            id: true,
+            username: true,
+            name: true,
+            age: true,
+            photo: true,
+            email: true
+        }
+    });
+
+    if(!currentUser) {
+        res.status(500).json({
+            message: "Something went wrong."
+        });
+        return;
+    }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            currentUser,
+            undefined,
+            true
+        )
+    );
+})
+
 const createRoom = asyncHandler ( async (req: Request, res: Response) => {
 
     //checking the types of request object
@@ -414,6 +457,7 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
+    getCurrentUser,
     createRoom,
     getMessages,
     getRoomInfo

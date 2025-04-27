@@ -4,6 +4,7 @@ import {
     loginUser,
     logoutUser,
     refreshAccessToken,
+    getCurrentUser,
     createRoom,
     getMessages,
     getRoomInfo
@@ -19,6 +20,8 @@ router.route("/signin").post(loginUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 
 router.route("/refresh-token").post(refreshAccessToken);
+
+router.route("/get-currentUser").get(verifyJWT, getCurrentUser);
 
 router.route("/create-room").post(verifyJWT, createRoom);
 
