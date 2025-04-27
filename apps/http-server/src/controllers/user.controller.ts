@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { options, REFRESH_TOKEN_SECRET } from "../config";
 import { ACCESS_TOKEN_SECRET } from "../globalConfig";
+import generateToken from "../utils/generateToken";
 
 const registerUser = asyncHandler( async (req: Request, res: Response) => {
 
@@ -96,27 +97,7 @@ const loginUser = asyncHandler( async (req: Request, res: Response) => {
         return;
     }
 
-    const accessToken = jwt.sign(
-        {
-            id: user.id,
-            username: user.username,
-            email: user.email
-        },
-        ACCESS_TOKEN_SECRET,
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-        }
-    );
-
-    const refreshToken = jwt.sign(
-        {
-            id: user.id
-        },
-        REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
-        }
-    );
+    const { accessToken, refreshToken } = generateToken(user);
 
     await prismaClient.user.update({
         where: {
