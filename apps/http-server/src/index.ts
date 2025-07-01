@@ -23,7 +23,7 @@ import googleRouter from "./routes/google.route";
 
 // api declaration
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/google", googleRouter)
+app.use("/api/v1/google", googleRouter);
 
 app.listen(process.env.PORT, () => {
     console.log(`App is listening on port: ${process.env.PORT}`);

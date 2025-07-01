@@ -13,25 +13,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AuthProvider {
+  local
+  google
+}
+
 model User {
   id              String       @id @default(uuid())
-  username        String       @unique
-  password        String    
+  username        String?      @unique
+  password        String? 
+  googleId        String?      @unique   
   name            String?   
   age             String?
-  photo           String?
+  profilePicture  String?
   email           String       @unique
   refreshToken    String?
   chats           Chat[]
   rooms           Room[]
+  authProvider    AuthProvider @default(local)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model Room {
   id         Int           @id @default(autoincrement())
   slug       String        @unique     
   chats      Chat[]
-  adminId    String
-  users      User[]        
+  adminId    String        
+  users      User[]  
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt     
 }
 
 model Chat {
@@ -41,4 +52,6 @@ model Chat {
   user       User          @relation(fields: [userId],  references: [id])
   roomId     Int
   room       Room          @relation(fields: [roomId], references: [id])
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }

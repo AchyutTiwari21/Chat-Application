@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { asyncHandler, ApiResponse, ApiError } from "../utils/index";
 import { prismaClient } from "@workspace/db/client";
-const crypto = require("crypto");
+import fetch from "node-fetch";
+import { options, REFRESH_TOKEN_SECRET } from "../config";
+import { ACCESS_TOKEN_SECRET } from "../globalConfig";
+import generateToken from "../utils/generateToken";
+
 import { 
     GOOGLE_CLIENT_ID, 
     GOOGLE_CALLBACK_URL, 
@@ -23,11 +27,15 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
 
     const { code } = req.query;
 
+    if (!code) {
+        throw new ApiError(400, "Authorization code not provided");
+    }
+
     const data = {
         code,
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
-        redirect_uri: "http://localhost:8000/google/callback",
+        redirect_uri: "http://localhost:8000/api/v1/google/callback",
         grant_type: "authorization_code",
     };
 
@@ -44,8 +52,12 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
         body: JSON.stringify(data),
     });
 
-    const access_token_data = await response.json();
+    const responseText = await response.json();
+    console.log("Token exchange response:", responseText);
 
+    const access_token_data = responseText;
+
+    //@ts-ignore
     const { id_token } = access_token_data;
 
     console.log(id_token);
@@ -56,14 +68,87 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
         `${process.env.GOOGLE_TOKEN_INFO_URL}?id_token=${id_token}`
     );
 
-//   const { email, name } = token_info_data;
-//   let user = await User.findOne({ email }).select("-password");
-//   if (!user) {
-//     user = await User.create({ email, name});
-//   }
-//   const token = user.generateToken();
-//   res.status(token_info_response.status).json({ user, token });
-    res.status(token_info_response.status).json(await token_info_response.json());
+    const tokenData = await token_info_response.json() as {
+        email: string;
+        name: string;
+        picture?: string;
+        sub: string; // googleId
+    };
+
+    const { email, name, picture, sub } = tokenData;
+
+
+    let user = await prismaClient.user.findFirst({
+        where: {
+            OR: [
+                { email },
+                { googleId: sub }
+            ]
+        },
+    });
+
+    if(!user) {
+        user = await prismaClient.user.create({
+            data: {
+                email,
+                name,
+                googleId: sub,
+                authProvider: "google",
+                profilePicture: picture
+            },
+        });
+    }
+
+    if(ACCESS_TOKEN_SECRET === undefined || REFRESH_TOKEN_SECRET === undefined) {
+        res.status(500).json({
+            message: "Something went wrong."
+        });
+        return;
+    }
+
+    const { accessToken, refreshToken } = generateToken(user);
+
+    await prismaClient.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            refreshToken
+        }
+    });
+
+    const loggedInUser = await prismaClient.user.findUnique({
+        where: {
+            id: user.id
+        },
+        omit: {
+            password: true,
+            refreshToken: true,
+            googleId: true,
+            authProvider: true
+        }
+    });
+
+    if(!loggedInUser) {
+        res.status(500).json({
+            message: "Something went wrong."
+        });
+        return;
+    }
+
+    res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200,
+            { user: loggedInUser, accessToken, refreshToken },
+            "User has been signed up",
+            true
+        )
+    );
+    return;
 });
 
 export {

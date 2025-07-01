@@ -36,9 +36,9 @@ const registerUser = asyncHandler( async (req: Request, res: Response) => {
     const user = await prismaClient.user.create({
         data: {
             username: parsedData.data.username,
-            name: parsedData.data.name,
-            age: parsedData.data.age,
-            photo: parsedData.data.photo,
+            name: parsedData.data?.name,
+            age: parsedData.data?.age,
+            profilePicture: parsedData.data?.profilePicture,
             email: parsedData.data.email,
             password: hashedPassword
         }
@@ -48,7 +48,7 @@ const registerUser = asyncHandler( async (req: Request, res: Response) => {
         res.status(201).json(
             new ApiResponse(
                 201,
-                { id: user.id, username: user.username, name: user.name, age: user.age, photo: user.photo, email: user.email },
+                { id: user.id, username: user.username, name: user.name, age: user.age, profilePicture: user.profilePicture, email: user.email },
                 "User has been signed up",
                 true
             )
@@ -82,6 +82,13 @@ const loginUser = asyncHandler( async (req: Request, res: Response) => {
 
     if(!user) {
         throw new ApiError(400, "User does not exists with this username and email.");
+    }
+
+    if(user.password === null || user.password === undefined) {
+        throw new ApiError(400, "User does not have password set.");
+    }
+    if(user.authProvider !== "local") {
+        throw new ApiError(400, "User is not registered with local auth provider.");
     }
 
     const passwordMatch = await bcrypt.compare(parsedData.data.password, user.password);    
@@ -214,6 +221,7 @@ const refreshAccessToken = asyncHandler( async (req: Request, res: Response) => 
         return;
     }
 
+    //@ts-ignore
     const accessToken = jwt.sign(
         {
             id: user.id,
@@ -226,6 +234,7 @@ const refreshAccessToken = asyncHandler( async (req: Request, res: Response) => 
         }
     );
 
+    //@ts-ignore
     const newRefreshToken = jwt.sign(
         {
             id: user.id
@@ -271,7 +280,7 @@ const getCurrentUser = asyncHandler( async (req: Request, res: Response) => {
             username: true,
             name: true,
             age: true,
-            photo: true,
+            profilePicture: true,
             email: true
         }
     });

@@ -4,7 +4,7 @@ const signupSchema = z.object({
     username: z.string().min(3).max(50),
     name: z.string().min(1).max(50).nullish(),
     age: z.string().min(1).max(3).nullish(),
-    photo: z.string().min(1).max(100).nullish(),
+    profilePicture: z.string().min(1).max(100).nullish(),
     email: z.string().min(5).max(50).email(),
     password: z.string().min(5).max(50)
 }).superRefine(({password}, checkPassComplexity) => {

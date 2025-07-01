@@ -7,10 +7,12 @@ const options = {
 }
 
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY;
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY;
 
 const GOOGLE_OAUTH_URL = process.env.GOOGLE_OAUTH_URL;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CALLBACK_URL = "http%3A//localhost:8000/google/callback";
+const GOOGLE_CALLBACK_URL = "http%3A//localhost:8000/api/v1/google/callback";
 
 const GOOGLE_OAUTH_SCOPES = [
 "https%3A//www.googleapis.com/auth/userinfo.email",
@@ -28,5 +30,7 @@ export {
     GOOGLE_CALLBACK_URL,
     GOOGLE_OAUTH_SCOPES,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_ACCESS_TOKEN_URL
+    GOOGLE_ACCESS_TOKEN_URL, 
+    REFRESH_TOKEN_EXPIRY, 
+    ACCESS_TOKEN_EXPIRY
 }
