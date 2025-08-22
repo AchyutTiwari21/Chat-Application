@@ -23,8 +23,6 @@ const googleLoginUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const googleCallback = asyncHandler(async (req: Request, res: Response) => {
-    console.log(req.query);
-
     const { code } = req.query;
 
     if (!code) {
@@ -39,8 +37,6 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
         grant_type: "authorization_code",
     };
 
-    console.log(data);
-
     // exchange authorization code for access token & id_token
 
     if(GOOGLE_ACCESS_TOKEN_URL === undefined) {
@@ -53,14 +49,11 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
     });
 
     const responseText = await response.json();
-    console.log("Token exchange response:", responseText);
 
     const access_token_data = responseText;
 
     //@ts-ignore
     const { id_token } = access_token_data;
-
-    console.log(id_token);
 
     // verify and extract the information in the id token
 
@@ -68,12 +61,17 @@ const googleCallback = asyncHandler(async (req: Request, res: Response) => {
         `${process.env.GOOGLE_TOKEN_INFO_URL}?id_token=${id_token}`
     );
 
+    console.log("Token Response: ", token_info_response);
+    
+
     const tokenData = await token_info_response.json() as {
         email: string;
         name: string;
         picture?: string;
         sub: string; // googleId
     };
+
+    console.log("Token Data: ", tokenData);
 
     const { email, name, picture, sub } = tokenData;
 
